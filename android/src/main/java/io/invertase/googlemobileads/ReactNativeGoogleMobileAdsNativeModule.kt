@@ -25,6 +25,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MediaAspectRatio
 import com.google.android.gms.ads.VideoController.VideoLifecycleCallbacks
 import com.google.android.gms.ads.VideoOptions
@@ -33,189 +34,212 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 
 @ReactModule(ReactNativeGoogleMobileAdsNativeModule.NAME)
 class ReactNativeGoogleMobileAdsNativeModule(
-  reactContext: ReactApplicationContext
+    reactContext: ReactApplicationContext
 ) : NativeGoogleMobileAdsNativeModuleSpec(reactContext) {
-  private val adHolders = HashMap<String, NativeAdHolder>()
+    private val adHolders = HashMap<String, NativeAdHolder>()
 
-  override fun getName() = NAME
+    override fun getName() = NAME
 
-  @ReactMethod
-  override fun load(adUnitId: String, requestOptions: ReadableMap, promise: Promise) {
-    val holder = NativeAdHolder(adUnitId, requestOptions)
-    holder.loadAd { nativeAd ->
-      val responseId = nativeAd.responseInfo?.responseId ?: return@loadAd
-      adHolders[responseId] = holder
+    @ReactMethod
+    override fun load(adUnitId: String, requestOptions: ReadableMap, promise: Promise) {
+        val holder = NativeAdHolder(adUnitId, requestOptions, promise)
+        holder.loadAd { nativeAd ->
+            val responseId = nativeAd.responseInfo?.responseId ?: return@loadAd
+            adHolders[responseId] = holder
 
-      val data = Arguments.createMap()
-      data.putString("responseId", responseId)
-      data.putString("advertiser", nativeAd.advertiser)
-      data.putString("body", nativeAd.body)
-      data.putString("callToAction", nativeAd.callToAction)
-      data.putString("headline", nativeAd.headline)
-      data.putString("price", nativeAd.price)
-      data.putString("store", nativeAd.store)
-      nativeAd.starRating?.let {
-        data.putDouble("starRating", it)
-      } ?: run {
-        data.putNull("starRating")
-      }
-      nativeAd.icon?.let {
-        val icon = Arguments.createMap()
-        icon.putDouble("scale", it.scale)
-        icon.putString("url", it.uri.toString())
-        data.putMap("icon", icon)
-      } ?: run {
-        data.putNull("icon")
-      }
-      val mediaContent = Arguments.createMap()
-      nativeAd.mediaContent?.let {
-        mediaContent.putDouble("aspectRatio", it.aspectRatio.toDouble())
-        mediaContent.putBoolean("hasVideoContent", it.hasVideoContent())
-        mediaContent.putDouble("duration", it.duration.toDouble())
-        data.putMap("mediaContent", mediaContent)
-      }
+            val data = Arguments.createMap()
+            data.putString("responseId", responseId)
+            data.putString("advertiser", nativeAd.advertiser)
+            data.putString("body", nativeAd.body)
+            data.putString("callToAction", nativeAd.callToAction)
+            data.putString("headline", nativeAd.headline)
+            data.putString("price", nativeAd.price)
+            data.putString("store", nativeAd.store)
+            nativeAd.starRating?.let {
+                data.putDouble("starRating", it)
+            } ?: run {
+                data.putNull("starRating")
+            }
+            nativeAd.icon?.let {
+                val icon = Arguments.createMap()
+                icon.putDouble("scale", it.scale)
+                icon.putString("url", it.uri.toString())
+                data.putMap("icon", icon)
+            } ?: run {
+                data.putNull("icon")
+            }
+            val mediaContent = Arguments.createMap()
+            nativeAd.mediaContent?.let {
+                mediaContent.putDouble("aspectRatio", it.aspectRatio.toDouble())
+                mediaContent.putBoolean("hasVideoContent", it.hasVideoContent())
+                mediaContent.putDouble("duration", it.duration.toDouble())
+                data.putMap("mediaContent", mediaContent)
+            }
 
-      promise.resolve(data)
-    }
-  }
+            nativeAd.images?.let {
+                val arr = Arguments.createArray();
+                nativeAd.images.forEach {
+                    val obj = Arguments.createMap();
+                    obj.putString("url", it.uri.toString())
+                    obj.putDouble("scale", it.scale)
+                    arr.pushMap(obj)
+                }
+                data.putArray("images", arr);
+            }
 
-  @ReactMethod
-  override fun destroy(responseId: String) {
-    adHolders[responseId]?.destroy()
-    adHolders.remove(responseId)
-  }
-
-  override fun invalidate() {
-    super.invalidate()
-    adHolders.values.forEach {
-      it.destroy()
-    }
-    adHolders.clear()
-  }
-
-  fun getNativeAd(responseId: String): NativeAd? {
-    return adHolders[responseId]?.nativeAd
-  }
-
-  private inner class NativeAdHolder(private val adUnitId: String, private val requestOptions: ReadableMap) {
-    var nativeAd: NativeAd? = null
-      private set
-
-    private val adListener: AdListener = object : AdListener() {
-      override fun onAdImpression() {
-        emitAdEvent("impression")
-      }
-
-      override fun onAdClicked() {
-        emitAdEvent("clicked")
-      }
-
-      override fun onAdOpened() {
-        emitAdEvent("opened")
-      }
-
-      override fun onAdClosed() {
-        emitAdEvent("closed")
-      }
-    }
-
-    private val videoLifecycleCallbacks: VideoLifecycleCallbacks = object : VideoLifecycleCallbacks() {
-      override fun onVideoPlay() {
-        emitAdEvent("video_played")
-      }
-
-      override fun onVideoPause() {
-        emitAdEvent("video_paused")
-      }
-
-      override fun onVideoEnd() {
-        emitAdEvent("video_ended")
-      }
-
-      override fun onVideoMute(isMuted: Boolean) {
-        emitAdEvent(if (isMuted) {
-          "video_muted"
-        } else {
-          "video_unmuted"
-        })
-      }
-    }
-
-    fun loadAd(loadedListener: NativeAd.OnNativeAdLoadedListener) {
-      val mediaAspectRatio = if (requestOptions.hasKey("aspectRatio")) {
-        when (requestOptions.getInt("aspectRatio")) {
-          1 -> MediaAspectRatio.ANY
-          2 -> MediaAspectRatio.LANDSCAPE
-          3 -> MediaAspectRatio.PORTRAIT
-          4 -> MediaAspectRatio.SQUARE
-          else -> MediaAspectRatio.UNKNOWN
+            promise.resolve(data)
         }
-      } else {
-        MediaAspectRatio.ANY
-      }
-      val adChoicesPlacement = if (requestOptions.hasKey("adChoicesPlacement")) {
-        when (requestOptions.getInt("adChoicesPlacement")) {
-          0 -> NativeAdOptions.ADCHOICES_TOP_LEFT
-          1 -> NativeAdOptions.ADCHOICES_TOP_RIGHT
-          2 -> NativeAdOptions.ADCHOICES_BOTTOM_RIGHT
-          3 -> NativeAdOptions.ADCHOICES_BOTTOM_LEFT
-          else -> NativeAdOptions.ADCHOICES_TOP_RIGHT
+    }
+
+    @ReactMethod
+    override fun destroy(responseId: String) {
+        adHolders[responseId]?.destroy()
+        adHolders.remove(responseId)
+    }
+
+    override fun invalidate() {
+        super.invalidate()
+        adHolders.values.forEach {
+            it.destroy()
         }
-      } else {
-        NativeAdOptions.ADCHOICES_TOP_RIGHT
-      }
-      val startVideoMuted = if (requestOptions.hasKey("startVideoMuted")) {
-        requestOptions.getBoolean("startVideoMuted")
-      } else {
-        true
-      }
-      val videoOptions = VideoOptions.Builder()
-        .setStartMuted(startVideoMuted)
-        .build()
-      val nativeAdOptions = NativeAdOptions.Builder()
+        adHolders.clear()
+    }
+
+    fun getNativeAd(responseId: String): NativeAd? {
+        return adHolders[responseId]?.nativeAd
+    }
+
+    private inner class NativeAdHolder(
+        private val adUnitId: String,
+        private val requestOptions: ReadableMap,
+        private val promise: Promise
+    ) {
+        var nativeAd: NativeAd? = null
+            private set
+
+        private val adListener: AdListener = object : AdListener() {
+            override fun onAdImpression() {
+                emitAdEvent("impression")
+            }
+
+            override fun onAdClicked() {
+                emitAdEvent("clicked")
+            }
+
+            override fun onAdOpened() {
+                emitAdEvent("opened")
+            }
+
+            override fun onAdClosed() {
+                emitAdEvent("closed")
+            }
+
+            override fun onAdFailedToLoad(p0: LoadAdError) {
+                promise.reject("Error", "message: ${p0.message} code: ${p0.code}")
+            }
+        }
+
+        private val videoLifecycleCallbacks: VideoLifecycleCallbacks =
+            object : VideoLifecycleCallbacks() {
+                override fun onVideoPlay() {
+                    emitAdEvent("video_played")
+                }
+
+                override fun onVideoPause() {
+                    emitAdEvent("video_paused")
+                }
+
+                override fun onVideoEnd() {
+                    emitAdEvent("video_ended")
+                }
+
+                override fun onVideoMute(isMuted: Boolean) {
+                    emitAdEvent(
+                        if (isMuted) {
+                            "video_muted"
+                        } else {
+                            "video_unmuted"
+                        }
+                    )
+                }
+            }
+
+        fun loadAd(loadedListener: NativeAd.OnNativeAdLoadedListener) {
+            val mediaAspectRatio = if (requestOptions.hasKey("aspectRatio")) {
+                when (requestOptions.getInt("aspectRatio")) {
+                    1 -> MediaAspectRatio.ANY
+                    2 -> MediaAspectRatio.LANDSCAPE
+                    3 -> MediaAspectRatio.PORTRAIT
+                    4 -> MediaAspectRatio.SQUARE
+                    else -> MediaAspectRatio.UNKNOWN
+                }
+            } else {
+                MediaAspectRatio.ANY
+            }
+            val adChoicesPlacement = if (requestOptions.hasKey("adChoicesPlacement")) {
+                when (requestOptions.getInt("adChoicesPlacement")) {
+                    0 -> NativeAdOptions.ADCHOICES_TOP_LEFT
+                    1 -> NativeAdOptions.ADCHOICES_TOP_RIGHT
+                    2 -> NativeAdOptions.ADCHOICES_BOTTOM_RIGHT
+                    3 -> NativeAdOptions.ADCHOICES_BOTTOM_LEFT
+                    else -> NativeAdOptions.ADCHOICES_TOP_RIGHT
+                }
+            } else {
+                NativeAdOptions.ADCHOICES_TOP_RIGHT
+            }
+            val startVideoMuted = if (requestOptions.hasKey("startVideoMuted")) {
+                requestOptions.getBoolean("startVideoMuted")
+            } else {
+                true
+            }
+            val videoOptions = VideoOptions.Builder()
+                .setStartMuted(startVideoMuted)
+                .build()
+            val nativeAdOptions = NativeAdOptions.Builder()
 //      .setReturnUrlsForImageAssets(true)
-        .setMediaAspectRatio(mediaAspectRatio)
-        .setAdChoicesPlacement(adChoicesPlacement)
-        .setVideoOptions(videoOptions)
-        .build()
-      val adLoader = AdLoader.Builder(reactApplicationContext, adUnitId)
-        .withNativeAdOptions(nativeAdOptions)
-        .withAdListener(adListener)
-        .forNativeAd { nativeAd ->
-          this.nativeAd = nativeAd
-          nativeAd.mediaContent?.videoController?.videoLifecycleCallbacks = videoLifecycleCallbacks
-          nativeAd.setOnPaidEventListener { adValue ->
-            val revenueData = Arguments.createMap()
-            revenueData.putDouble("value", 1e-6 * adValue.valueMicros)
-            revenueData.putInt("precision", adValue.precisionType)
-            revenueData.putString("currency", adValue.currencyCode)
-            emitAdEvent("paid", revenueData)
-          }
-          loadedListener.onNativeAdLoaded(nativeAd)
+                .setMediaAspectRatio(mediaAspectRatio)
+                .setAdChoicesPlacement(adChoicesPlacement)
+                .setVideoOptions(videoOptions)
+                .build()
+            val adLoader = AdLoader.Builder(reactApplicationContext, adUnitId)
+                .withNativeAdOptions(nativeAdOptions)
+                .withAdListener(adListener)
+                .forNativeAd { nativeAd ->
+                    this.nativeAd = nativeAd
+                    nativeAd.mediaContent?.videoController?.videoLifecycleCallbacks =
+                        videoLifecycleCallbacks
+                    nativeAd.setOnPaidEventListener { adValue ->
+                        val revenueData = Arguments.createMap()
+                        revenueData.putDouble("value", 1e-6 * adValue.valueMicros)
+                        revenueData.putInt("precision", adValue.precisionType)
+                        revenueData.putString("currency", adValue.currencyCode)
+                        emitAdEvent("paid", revenueData)
+                    }
+                    loadedListener.onNativeAdLoaded(nativeAd)
+                }
+                .build()
+            val adRequest = ReactNativeGoogleMobileAdsCommon.buildAdRequest(requestOptions)
+            adLoader.loadAd(adRequest)
         }
-        .build()
-      val adRequest = ReactNativeGoogleMobileAdsCommon.buildAdRequest(requestOptions)
-      adLoader.loadAd(adRequest)
+
+        fun destroy() {
+            nativeAd?.destroy()
+            nativeAd = null
+        }
+
+        private fun emitAdEvent(type: String, eventData: ReadableMap? = null) {
+            val nativeAd = this.nativeAd ?: return
+            val payload = Arguments.createMap()
+            if (eventData != null) {
+                payload.merge(eventData)
+            }
+            payload.putString("responseId", nativeAd.responseInfo?.responseId)
+            payload.putString("type", type)
+            this@ReactNativeGoogleMobileAdsNativeModule.emitOnAdEvent(payload)
+        }
     }
 
-    fun destroy() {
-      nativeAd?.destroy()
-      nativeAd = null
+    companion object {
+        const val NAME = "RNGoogleMobileAdsNativeModule"
     }
-
-    private fun emitAdEvent(type: String, eventData: ReadableMap? = null) {
-      val nativeAd = this.nativeAd ?: return
-      val payload = Arguments.createMap()
-      if (eventData != null) {
-        payload.merge(eventData)
-      }
-      payload.putString("responseId", nativeAd.responseInfo?.responseId)
-      payload.putString("type", type)
-      this@ReactNativeGoogleMobileAdsNativeModule.emitOnAdEvent(payload)
-    }
-  }
-
-  companion object {
-    const val NAME = "RNGoogleMobileAdsNativeModule"
-  }
 }
