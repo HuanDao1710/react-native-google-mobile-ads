@@ -215,7 +215,7 @@ public class ReactNativeGoogleMobileAdsBannerAdViewManager
     // For optimal mediation performance ad objects should be initialized with
     // activity, rather than just context:
     // https://developers.google.com/admob/android/mediation#initialize_your_ad_object_with_an_activity_instance
-    Activity currentActivity = ((ReactContext) reactViewGroup.getContext()).reactContext.getCurrentActivity();
+    Activity currentActivity = ((ReactContext) reactViewGroup.getContext()).getCurrentActivity();
     if (currentActivity == null) return null;
 
     BaseAdView adView =

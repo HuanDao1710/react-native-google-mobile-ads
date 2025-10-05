@@ -111,7 +111,7 @@ public class ReactNativeGoogleMobileAdsConsentModule extends ReactNativeModule {
 
       ConsentRequestParameters consentRequestParameters = paramsBuilder.build();
 
-      Activity currentActivity = reactContext.getCurrentActivity();
+      Activity currentActivity = getReactApplicationContext().getCurrentActivity();
 
       if (currentActivity == null) {
         rejectPromiseWithCodeAndMessage(
@@ -138,7 +138,7 @@ public class ReactNativeGoogleMobileAdsConsentModule extends ReactNativeModule {
   @ReactMethod
   public void showForm(final Promise promise) {
     try {
-      Activity currentActivity = reactContext.getCurrentActivity();
+      Activity currentActivity = getReactApplicationContext().getCurrentActivity();
 
       if (currentActivity == null) {
         rejectPromiseWithCodeAndMessage(
@@ -174,7 +174,7 @@ public class ReactNativeGoogleMobileAdsConsentModule extends ReactNativeModule {
   @ReactMethod
   public void showPrivacyOptionsForm(final Promise promise) {
     try {
-      Activity currentActivity = reactContext.getCurrentActivity();
+      Activity currentActivity = getReactApplicationContext().getCurrentActivity();
 
       if (currentActivity == null) {
         rejectPromiseWithCodeAndMessage(
@@ -204,7 +204,7 @@ public class ReactNativeGoogleMobileAdsConsentModule extends ReactNativeModule {
   @ReactMethod
   public void loadAndShowConsentFormIfRequired(final Promise promise) {
     try {
-      Activity currentActivity = reactContext.getCurrentActivity();
+      Activity currentActivity = getReactApplicationContext().getCurrentActivity();
 
       if (currentActivity == null) {
         rejectPromiseWithCodeAndMessage(

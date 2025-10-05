@@ -45,7 +45,7 @@ public class ReactNativeGoogleMobileAdsCommon {
 
     try {
       Display display =
-          Objects.requireNonNull(((ReactContext) reactViewGroup.getContext()).reactContext.getCurrentActivity())
+          Objects.requireNonNull(((ReactContext) reactViewGroup.getContext()).getCurrentActivity())
               .getWindowManager()
               .getDefaultDisplay();
 
