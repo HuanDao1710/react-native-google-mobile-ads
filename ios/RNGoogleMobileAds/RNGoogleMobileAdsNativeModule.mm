@@ -86,6 +86,13 @@ RCT_EXPORT_METHOD(
         NSString *responseId = nativeAd.responseInfo.responseIdentifier;
         [_adHolders setValue:adHolder forKey:responseId];
 
+        NSMutableArray *images = [NSMutableArray array];
+        if (nativeAd.images != nil) {
+            for (GADNativeAdImage *image in nativeAd.images) {
+                [images addObject:@{ @"url": image.imageURL.absoluteString}];
+            }
+        }
+
         resolve(@{
           @"responseId" : responseId,
           @"advertiser" : nativeAd.advertiser ?: [NSNull null],
@@ -102,7 +109,8 @@ RCT_EXPORT_METHOD(
             @"aspectRatio" : @(nativeAd.mediaContent.aspectRatio),
             @"hasVideoContent" : @(nativeAd.mediaContent.hasVideoContent),
             @"duration" : @(nativeAd.mediaContent.duration)
-          }
+          },
+          @"images": images
         });
       }];
     })
