@@ -150,6 +150,13 @@ abstract class ReactNativeGoogleMobileAdsFullScreenAdModule<T>(
         val adHelper = ReactNativeGoogleMobileAdsAdHelper(ad)
         var eventType = ReactNativeGoogleMobileAdsEvent.GOOGLE_MOBILE_ADS_EVENT_LOADED
         var data: WritableMap? = null
+        
+        // Get network name from mediation adapter
+        val networkName = adHelper.responseInfo?.loadedAdapterResponseInfo?.adapterClassName
+        if (networkName != null) {
+          data = Arguments.createMap()
+          data.putString("networkName", networkName)
+        }
 
         var paidEventListener = OnPaidEventListener { adValue ->
           val payload = Arguments.createMap()
@@ -176,7 +183,9 @@ abstract class ReactNativeGoogleMobileAdsFullScreenAdModule<T>(
           eventType = ReactNativeGoogleMobileAdsEvent.GOOGLE_MOBILE_ADS_EVENT_REWARDED_LOADED
 
           val rewardItem = adHelper.rewardItem
-          data = Arguments.createMap()
+          if (data == null) {
+            data = Arguments.createMap()
+          }
           data.putString("type", rewardItem.type)
           data.putInt("amount", rewardItem.amount)
 

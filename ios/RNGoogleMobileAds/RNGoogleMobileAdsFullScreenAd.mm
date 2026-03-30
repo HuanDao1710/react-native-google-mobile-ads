@@ -92,7 +92,27 @@
         }
 
         NSString *eventType = GOOGLE_MOBILE_ADS_EVENT_LOADED;
-        NSDictionary *data = nil;
+        NSMutableDictionary *data = [NSMutableDictionary dictionary];
+        
+        // Get network name from mediation adapter
+        NSString *networkName = nil;
+        GADResponseInfo *responseInfo = nil;
+        if ([ad isKindOfClass:[GADRewardedAd class]]) {
+          responseInfo = [(GADRewardedAd *)ad responseInfo];
+        } else if ([ad isKindOfClass:[GADRewardedInterstitialAd class]]) {
+          responseInfo = [(GADRewardedInterstitialAd *)ad responseInfo];
+        } else if ([ad isKindOfClass:[GADInterstitialAd class]]) {
+          responseInfo = [(GADInterstitialAd *)ad responseInfo];
+        } else if ([ad isKindOfClass:[GADAppOpenAd class]]) {
+          responseInfo = [(GADAppOpenAd *)ad responseInfo];
+        }
+        
+        if (responseInfo && responseInfo.loadedAdNetworkResponseInfo) {
+          networkName = responseInfo.loadedAdNetworkResponseInfo.adNetworkClassName;
+        }
+        if (networkName) {
+          [data setObject:networkName forKey:@"networkName"];
+        }
 
         // Set up paid event handler
         GADPaidEventHandler paidEventHandler = ^(GADAdValue *value) {
@@ -137,7 +157,8 @@
           eventType = GOOGLE_MOBILE_ADS_EVENT_REWARDED_LOADED;
           GADAdReward *adReward =
               [(GADRewardedAd *)ad adReward] ?: [(GADRewardedInterstitialAd *)ad adReward];
-          data = @{@"type" : adReward.type, @"amount" : adReward.amount};
+          [data setObject:adReward.type forKey:@"type"];
+          [data setObject:adReward.amount forKey:@"amount"];
         }
 
         if ([ad isKindOfClass:[GAMInterstitialAd class]]) {

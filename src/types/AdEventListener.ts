@@ -18,13 +18,18 @@
 import { AdEventType } from '../AdEventType';
 import { GAMAdEventType } from '../GAMAdEventType';
 import { RewardedAdEventType } from '../RewardedAdEventType';
+import { AdLoadedEvent, RewardedAdLoadedEvent } from './AdLoadedEvent';
 import { AppEvent } from './AppEvent';
 import { RewardedAdReward } from './RewardedAdReward';
 
 export type AdEventPayload<T extends AdEventType | RewardedAdEventType | GAMAdEventType = never> =
   T extends AdEventType.ERROR
     ? Error
-    : T extends RewardedAdEventType
+    : T extends AdEventType.LOADED
+    ? AdLoadedEvent
+    : T extends RewardedAdEventType.LOADED
+    ? RewardedAdLoadedEvent
+    : T extends RewardedAdEventType.EARNED_REWARD
     ? RewardedAdReward
     : T extends GAMAdEventType
     ? AppEvent

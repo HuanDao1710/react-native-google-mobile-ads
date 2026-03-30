@@ -95,7 +95,7 @@ export abstract class MobileAd implements MobileAdInterface {
     body: {
       type: EventType;
       error?: { code: string; message: string };
-      data?: RewardedAdReward | AppEvent;
+      data?: RewardedAdReward | AppEvent | { networkName?: string };
     };
   }) {
     const { type, error, data } = event.body;
