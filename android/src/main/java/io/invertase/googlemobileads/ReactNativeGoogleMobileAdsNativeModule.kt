@@ -25,6 +25,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MediaAspectRatio
 import com.google.android.gms.ads.VideoController.VideoLifecycleCallbacks
 import com.google.android.gms.ads.VideoOptions
@@ -41,7 +42,7 @@ class ReactNativeGoogleMobileAdsNativeModule(
 
   @ReactMethod
   override fun load(adUnitId: String, requestOptions: ReadableMap, promise: Promise) {
-    val holder = NativeAdHolder(adUnitId, requestOptions)
+    val holder = NativeAdHolder(adUnitId, requestOptions, promise)
     holder.loadAd { nativeAd ->
       val responseId = nativeAd.responseInfo?.responseId ?: return@loadAd
       adHolders[responseId] = holder
@@ -75,6 +76,18 @@ class ReactNativeGoogleMobileAdsNativeModule(
         data.putMap("mediaContent", mediaContent)
       }
 
+      // App-specific: expose all ad images (upstream only exposes icon/mediaContent)
+      nativeAd.images?.let { imageList ->
+        val arr = Arguments.createArray()
+        imageList.forEach {
+          val obj = Arguments.createMap()
+          obj.putString("url", it.uri.toString())
+          obj.putDouble("scale", it.scale)
+          arr.pushMap(obj)
+        }
+        data.putArray("images", arr)
+      }
+
       promise.resolve(data)
     }
   }
@@ -97,7 +110,11 @@ class ReactNativeGoogleMobileAdsNativeModule(
     return adHolders[responseId]?.nativeAd
   }
 
-  private inner class NativeAdHolder(private val adUnitId: String, private val requestOptions: ReadableMap) {
+  private inner class NativeAdHolder(
+    private val adUnitId: String,
+    private val requestOptions: ReadableMap,
+    private val promise: Promise
+  ) {
     var nativeAd: NativeAd? = null
       private set
 
@@ -116,6 +133,11 @@ class ReactNativeGoogleMobileAdsNativeModule(
 
       override fun onAdClosed() {
         emitAdEvent("closed")
+      }
+
+      // Upstream never settles the load promise on failure — reject so JS callers don't hang
+      override fun onAdFailedToLoad(error: LoadAdError) {
+        promise.reject("Error", "message: ${error.message} code: ${error.code}")
       }
     }
 
