@@ -97,8 +97,19 @@ RCT_EXPORT_METHOD(
         [_adHolders setValue:adHolder forKey:responseId];
         [RNGoogleMobileAdsNativeAdRegistry setNativeAd:nativeAd forResponseId:responseId];
 
+        // App-specific: expose all ad images (upstream only exposes icon/mediaContent)
+        NSMutableArray *images = [NSMutableArray array];
+        if (nativeAd.images != nil) {
+          for (GADNativeAdImage *image in nativeAd.images) {
+            if (image.imageURL != nil) {
+              [images addObject:@{@"url" : image.imageURL.absoluteString, @"scale" : @(image.scale)}];
+            }
+          }
+        }
+
         resolve(@{
           @"responseId" : responseId,
+          @"images" : images,
           @"advertiser" : nativeAd.advertiser ?: [NSNull null],
           @"body" : nativeAd.body ?: [NSNull null],
           @"callToAction" : nativeAd.callToAction ?: [NSNull null],
