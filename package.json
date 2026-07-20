@@ -170,6 +170,5 @@
     "android": {
       "javaPackageName": "io.invertase.googlemobileads"
     }
-  },
-  "packageManager": "yarn@4.10.3"
+  }
 }
