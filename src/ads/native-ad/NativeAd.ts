@@ -50,6 +50,12 @@ export class NativeAd {
   readonly images: Array<NativeAdImage> | null;
   readonly mediaContent: NativeMediaContent | null;
   readonly extras: Record<string, unknown> | null;
+  /**
+   * Winning mediation network of this ad (e.g. `"Meta Audience Network"`), available
+   * as soon as the ad is loaded. `undefined` when the SDK reports no loaded adapter.
+   */
+  readonly adSourceName?: string;
+  readonly adSourceInstanceName?: string;
 
   private nativeEventSubscription: EventSubscription;
   private eventEmitter: EventEmitter;
@@ -68,6 +74,8 @@ export class NativeAd {
     this.images = props.images;
     this.mediaContent = props.mediaContent;
     this.extras = props.extras as Record<string, unknown>;
+    this.adSourceName = props.adSourceName;
+    this.adSourceInstanceName = props.adSourceInstanceName;
 
     if ('onAdEvent' in NativeGoogleMobileAdsNativeModule) {
       this.nativeEventSubscription = NativeGoogleMobileAdsNativeModule.onAdEvent(

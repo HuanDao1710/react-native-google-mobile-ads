@@ -258,6 +258,16 @@ NSString *const GOOGLE_MOBILE_ADS_EVENT_REWARDED_EARNED_REWARD = @"rewarded_earn
     @"currency" : value.currencyCode ?: @""
   } mutableCopy];
 
+  [self putLoadedAdapterResponse:data responseInfo:responseInfo];
+  return data;
+}
+
+/**
+ * Adds the winning mediation network to an arbitrary payload. Shared by paid events and by the
+ * native-ad load payload, where JS needs the network before the impression is recorded.
+ */
++ (void)putLoadedAdapterResponse:(NSMutableDictionary *)data
+                    responseInfo:(GADResponseInfo *)responseInfo {
   GADAdNetworkResponseInfo *adapterResponse = responseInfo.loadedAdNetworkResponseInfo;
   if (adapterResponse.adSourceName) {
     data[@"adSourceName"] = adapterResponse.adSourceName;
@@ -265,7 +275,6 @@ NSString *const GOOGLE_MOBILE_ADS_EVENT_REWARDED_EARNED_REWARD = @"rewarded_earn
   if (adapterResponse.adSourceInstanceName) {
     data[@"adSourceInstanceName"] = adapterResponse.adSourceInstanceName;
   }
-  return data;
 }
 
 @end

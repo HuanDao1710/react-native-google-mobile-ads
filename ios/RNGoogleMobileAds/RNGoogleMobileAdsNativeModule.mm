@@ -107,7 +107,7 @@ RCT_EXPORT_METHOD(
           }
         }
 
-        resolve(@{
+        NSMutableDictionary *data = [@{
           @"responseId" : responseId,
           @"images" : images,
           @"advertiser" : nativeAd.advertiser ?: [NSNull null],
@@ -125,7 +125,13 @@ RCT_EXPORT_METHOD(
             @"hasVideoContent" : @(nativeAd.mediaContent.hasVideoContent),
             @"duration" : @(nativeAd.mediaContent.duration)
           }
-        });
+        } mutableCopy];
+
+        // App-specific: winning mediation network at load time, so JS can adapt the ad
+        // layout before the impression is recorded (paid events fire too late for that).
+        [RNGoogleMobileAdsCommon putLoadedAdapterResponse:data responseInfo:nativeAd.responseInfo];
+
+        resolve(data);
       }];
     })
 

@@ -88,6 +88,10 @@ class ReactNativeGoogleMobileAdsNativeModule(
         data.putArray("images", arr)
       }
 
+      // App-specific: winning mediation network at load time, so JS can adapt the ad
+      // layout before the impression is recorded (paid events fire too late for that).
+      ReactNativeGoogleMobileAdsCommon.putLoadedAdapterResponse(data, nativeAd.responseInfo)
+
       promise.resolve(data)
     }
   }

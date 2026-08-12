@@ -45,6 +45,9 @@
 + (NSDictionary *_Nonnull)paidEventDataForAdValue:(GADAdValue *_Nonnull)value
                                      responseInfo:(nullable GADResponseInfo *)responseInfo;
 
++ (void)putLoadedAdapterResponse:(NSMutableDictionary *_Nonnull)data
+                    responseInfo:(nullable GADResponseInfo *)responseInfo;
+
 @end
 
 @interface RNGADInterstitial : GADInterstitialAd

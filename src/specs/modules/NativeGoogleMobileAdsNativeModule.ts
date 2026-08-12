@@ -37,6 +37,11 @@ export type NativeAdProps = {
   images: Array<NativeAdImage> | null;
   mediaContent: NativeMediaContent;
   extras: UnsafeObject | null;
+  // App-specific: winning mediation network, read off ResponseInfo at load time so
+  // callers can adapt the ad layout before the impression is recorded (the paid
+  // event carries the same data but only fires after rendering).
+  adSourceName?: string;
+  adSourceInstanceName?: string;
 };
 
 export type NativeAdImage = {

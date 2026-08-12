@@ -19,6 +19,12 @@ export declare class NativeAd {
     readonly images: Array<NativeAdImage> | null;
     readonly mediaContent: NativeMediaContent | null;
     readonly extras: Record<string, unknown> | null;
+    /**
+     * Winning mediation network of this ad (e.g. `"Meta Audience Network"`), available
+     * as soon as the ad is loaded. `undefined` when the SDK reports no loaded adapter.
+     */
+    readonly adSourceName?: string;
+    readonly adSourceInstanceName?: string;
     private nativeEventSubscription;
     private eventEmitter;
     private constructor();

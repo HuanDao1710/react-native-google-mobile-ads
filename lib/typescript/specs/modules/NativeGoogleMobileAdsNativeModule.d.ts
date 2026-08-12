@@ -13,6 +13,8 @@ export type NativeAdProps = {
     images: Array<NativeAdImage> | null;
     mediaContent: NativeMediaContent;
     extras: UnsafeObject | null;
+    adSourceName?: string;
+    adSourceInstanceName?: string;
 };
 export type NativeAdImage = {
     url: string;
