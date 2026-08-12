@@ -156,6 +156,7 @@ abstract class ReactNativeGoogleMobileAdsFullScreenAdModule<T>(
           payload.putDouble("value", 1e-6 * adValue.getValueMicros());
           payload.putDouble("precision", 1.0 * adValue.getPrecisionType());
           payload.putString("currency", adValue.getCurrencyCode());
+          ReactNativeGoogleMobileAdsCommon.putLoadedAdapterResponse(payload, adHelper.responseInfo)
           sendAdEvent(
             ReactNativeGoogleMobileAdsEvent.GOOGLE_MOBILE_ADS_EVENT_PAID,
             requestId,

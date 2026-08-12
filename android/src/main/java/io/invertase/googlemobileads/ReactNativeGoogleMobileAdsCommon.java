@@ -31,6 +31,8 @@ import com.google.ads.mediation.admob.AdMobAdapter;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdapterResponseInfo;
+import com.google.android.gms.ads.ResponseInfo;
 import com.google.android.gms.ads.admanager.AdManagerAdRequest;
 import io.invertase.googlemobileads.common.ReactNativeAdView;
 import io.invertase.googlemobileads.common.ReactNativeEventEmitter;
@@ -304,5 +306,23 @@ public class ReactNativeGoogleMobileAdsCommon {
   public static boolean isAdManagerUnit(String unitId) {
     if (unitId == null) return false;
     return unitId.startsWith("/");
+  }
+
+  /**
+   * Adds the winning mediation network of an impression to a paid-event payload.
+   *
+   * <p>The Google Mobile Ads SDK only exposes this through {@link ResponseInfo}, which is not part
+   * of the {@code AdValue} handed to an {@code OnPaidEventListener} — the caller has to read it off
+   * the ad object itself. Both keys are omitted when the SDK reports no loaded adapter, so JS sees
+   * {@code undefined} rather than an empty string.
+   */
+  public static void putLoadedAdapterResponse(
+      WritableMap payload, @Nullable ResponseInfo responseInfo) {
+    if (responseInfo == null) return;
+    AdapterResponseInfo adapterResponse = responseInfo.getLoadedAdapterResponseInfo();
+    if (adapterResponse == null) return;
+
+    payload.putString("adSourceName", adapterResponse.getAdSourceName());
+    payload.putString("adSourceInstanceName", adapterResponse.getAdSourceInstanceName());
   }
 }

@@ -30,7 +30,11 @@ export type NativeAdEventPayload = {
 export type NativeAdPaidEventPayload = {
     value: number;
     precision: number;
-    currencyCode: string;
+    currency: string;
+    /** Winning ad network name from the loaded adapter response, if reported. */
+    adSourceName?: string;
+    /** Placement name configured on the winning network's side, if reported. */
+    adSourceInstanceName?: string;
 };
 export interface Spec extends TurboModule {
     load(adUnitId: string, requestOptions: UnsafeObject): Promise<NativeAdProps>;

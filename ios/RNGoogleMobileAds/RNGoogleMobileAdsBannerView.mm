@@ -137,11 +137,17 @@ using namespace facebook::react;
     _banner = [[GADBannerView alloc] initWithAdSize:adSize];
   }
   _banner.paidEventHandler = ^(GADAdValue *_Nonnull value) {
+    // The winning network is only on GADResponseInfo, which GADAdValue does not carry — read it off
+    // the banner. Absent values stay empty strings; the struct members are not optional.
+    GADAdNetworkResponseInfo *adapterResponse =
+        self.banner.responseInfo.loadedAdNetworkResponseInfo;
     std::dynamic_pointer_cast<const facebook::react::RNGoogleMobileAdsBannerViewEventEmitter>(
         _eventEmitter)
         ->onNativeEvent(facebook::react::RNGoogleMobileAdsBannerViewEventEmitter::OnNativeEvent {
           .type = "onPaid", .value = value.value.doubleValue,
-          .precision = @(value.precision).doubleValue, .currency = value.currencyCode.UTF8String
+          .precision = @(value.precision).doubleValue, .currency = value.currencyCode.UTF8String,
+          .adSourceName = (adapterResponse.adSourceName ?: @"").UTF8String,
+          .adSourceInstanceName = (adapterResponse.adSourceInstanceName ?: @"").UTF8String
         });
   };
   _banner.rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;

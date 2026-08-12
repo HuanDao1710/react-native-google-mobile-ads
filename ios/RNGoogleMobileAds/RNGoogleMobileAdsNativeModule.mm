@@ -241,12 +241,13 @@ RCT_EXPORT_METHOD(destroy
     didReceiveNativeAd:(nonnull GADNativeAd *)nativeAd {
   _nativeAd = nativeAd;
   _nativeAd.delegate = self;
+  // The ad retains this handler, so capture it weakly to avoid a retain cycle. It is only read to
+  // pull the response info, which is not carried by GADAdValue.
+  __weak GADNativeAd *weakNativeAd = nativeAd;
   _nativeAd.paidEventHandler = ^(GADAdValue *_Nonnull adValue) {
-    NSDictionary *revenueData = @{
-      @"value" : adValue.value,
-      @"precision" : @(adValue.precision),
-      @"currency" : adValue.currencyCode ?: @""
-    };
+    NSDictionary *revenueData =
+        [RNGoogleMobileAdsCommon paidEventDataForAdValue:adValue
+                                            responseInfo:weakNativeAd.responseInfo];
     [self emitAdEvent:@"paid" withData:revenueData];
   };
   if (nativeAd.mediaContent.hasVideoContent) {

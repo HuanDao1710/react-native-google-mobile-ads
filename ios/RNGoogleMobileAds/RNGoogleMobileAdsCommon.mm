@@ -243,6 +243,31 @@ NSString *const GOOGLE_MOBILE_ADS_EVENT_REWARDED_EARNED_REWARD = @"rewarded_earn
   return controller;
 }
 
+/**
+ * Builds a paid-event payload, adding the winning mediation network when the SDK reports one.
+ *
+ * The network is only available through GADResponseInfo, which is not part of the GADAdValue handed
+ * to a GADPaidEventHandler — the caller has to read it off the ad object itself. Both keys are
+ * omitted when there is no loaded adapter, so JS sees undefined rather than an empty string.
+ */
++ (NSDictionary *)paidEventDataForAdValue:(GADAdValue *)value
+                             responseInfo:(GADResponseInfo *)responseInfo {
+  NSMutableDictionary *data = [@{
+    @"value" : value.value,
+    @"precision" : @(value.precision),
+    @"currency" : value.currencyCode ?: @""
+  } mutableCopy];
+
+  GADAdNetworkResponseInfo *adapterResponse = responseInfo.loadedAdNetworkResponseInfo;
+  if (adapterResponse.adSourceName) {
+    data[@"adSourceName"] = adapterResponse.adSourceName;
+  }
+  if (adapterResponse.adSourceInstanceName) {
+    data[@"adSourceInstanceName"] = adapterResponse.adSourceInstanceName;
+  }
+  return data;
+}
+
 @end
 
 #endif

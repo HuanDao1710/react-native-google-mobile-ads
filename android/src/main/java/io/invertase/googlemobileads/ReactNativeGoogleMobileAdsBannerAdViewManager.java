@@ -232,6 +232,8 @@ public class ReactNativeGoogleMobileAdsBannerAdViewManager
             payload.putDouble("value", 1e-6 * adValue.getValueMicros());
             payload.putDouble("precision", adValue.getPrecisionType());
             payload.putString("currency", adValue.getCurrencyCode());
+            ReactNativeGoogleMobileAdsCommon.putLoadedAdapterResponse(
+                payload, adView.getResponseInfo());
             sendEvent(reactViewGroup, EVENT_PAID, payload);
           }
         });

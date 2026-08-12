@@ -94,17 +94,21 @@
         NSString *eventType = GOOGLE_MOBILE_ADS_EVENT_LOADED;
         NSDictionary *data = nil;
 
-        // Set up paid event handler
+        // Set up paid event handler.
+        // The ad retains this handler, so capture it weakly to avoid a retain cycle. It is only
+        // read to pull the response info, which is not carried by GADAdValue.
+        __weak id weakAd = ad;
         GADPaidEventHandler paidEventHandler = ^(GADAdValue *value) {
+          id strongAd = weakAd;
+          GADResponseInfo *responseInfo = [strongAd respondsToSelector:@selector(responseInfo)]
+                                              ? [strongAd responseInfo]
+                                              : nil;
           [weakSelf sendAdEvent:@"paid"
                       requestId:requestId
                        adUnitId:adUnitId
                           error:nil
-                           data:@{
-                             @"value" : value.value,
-                             @"precision" : @(value.precision),
-                             @"currency" : value.currencyCode
-                           }];
+                           data:[RNGoogleMobileAdsCommon paidEventDataForAdValue:value
+                                                                    responseInfo:responseInfo]];
         };
 
         if ([ad isKindOfClass:[GADRewardedAd class]]) {

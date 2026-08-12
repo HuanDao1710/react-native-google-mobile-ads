@@ -42,6 +42,9 @@
 
 + (nullable UIViewController *)currentViewController;
 
++ (NSDictionary *_Nonnull)paidEventDataForAdValue:(GADAdValue *_Nonnull)value
+                                     responseInfo:(nullable GADResponseInfo *)responseInfo;
+
 @end
 
 @interface RNGADInterstitial : GADInterstitialAd

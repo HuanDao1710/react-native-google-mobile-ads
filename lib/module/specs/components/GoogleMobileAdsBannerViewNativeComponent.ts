@@ -32,6 +32,8 @@ export type NativeEvent = {
   currency?: string;
   precision?: Float;
   value?: Float;
+  adSourceName?: string;
+  adSourceInstanceName?: string;
 };
 
 export interface NativeProps extends ViewProps {

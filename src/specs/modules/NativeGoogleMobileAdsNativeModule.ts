@@ -58,7 +58,14 @@ export type NativeAdEventPayload = {
 export type NativeAdPaidEventPayload = {
   value: number;
   precision: number;
-  currencyCode: string;
+  // Key emitted by both platforms is "currency" — see ReactNativeGoogleMobileAdsNativeModule.kt
+  // and RNGoogleMobileAdsNativeModule.mm. It was previously declared as `currencyCode` here,
+  // which never matched the runtime payload.
+  currency: string;
+  /** Winning ad network name from the loaded adapter response, if reported. */
+  adSourceName?: string;
+  /** Placement name configured on the winning network's side, if reported. */
+  adSourceInstanceName?: string;
 };
 
 export interface Spec extends TurboModule {

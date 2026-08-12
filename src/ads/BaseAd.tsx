@@ -94,6 +94,8 @@ export const BaseAd = React.forwardRef<
             currency: string;
             precision: RevenuePrecisions;
             value: number;
+            adSourceName?: string;
+            adSourceInstanceName?: string;
           };
       const { type } = nativeEvent;
 
@@ -126,6 +128,8 @@ export const BaseAd = React.forwardRef<
                 currency: nativeEvent.currency,
                 precision: nativeEvent.precision,
                 value: nativeEvent.value,
+                adSourceName: nativeEvent.adSourceName,
+                adSourceInstanceName: nativeEvent.adSourceInstanceName,
               });
             }
             break;

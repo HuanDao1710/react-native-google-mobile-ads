@@ -211,6 +211,10 @@ class ReactNativeGoogleMobileAdsNativeModule(
             revenueData.putDouble("value", 1e-6 * adValue.valueMicros)
             revenueData.putInt("precision", adValue.precisionType)
             revenueData.putString("currency", adValue.currencyCode)
+            ReactNativeGoogleMobileAdsCommon.putLoadedAdapterResponse(
+              revenueData,
+              nativeAd.responseInfo
+            )
             emitAdEvent("paid", revenueData)
           }
           loadedListener.onNativeAdLoaded(nativeAd)

@@ -20,6 +20,7 @@ package io.invertase.googlemobileads
 import android.app.Activity
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.OnUserEarnedRewardListener
+import com.google.android.gms.ads.ResponseInfo
 import com.google.android.gms.ads.admanager.AdManagerInterstitialAd
 import com.google.android.gms.ads.admanager.AppEventListener
 import com.google.android.gms.ads.appopen.AppOpenAd
@@ -78,4 +79,18 @@ class ReactNativeGoogleMobileAdsAdHelper<T>(private val ad: T) {
       }
       throw IllegalStateException("Ad type not supported")
     }
+
+  /**
+   * Response info of the loaded ad, used to report which mediation network won the impression.
+   * Null instead of throwing: a missing response info must never break the paid event.
+   */
+  val responseInfo: ResponseInfo?
+    get() =
+      when (ad) {
+        is AppOpenAd -> ad.responseInfo
+        is InterstitialAd -> ad.responseInfo
+        is RewardedAd -> ad.responseInfo
+        is RewardedInterstitialAd -> ad.responseInfo
+        else -> null
+      }
 }
