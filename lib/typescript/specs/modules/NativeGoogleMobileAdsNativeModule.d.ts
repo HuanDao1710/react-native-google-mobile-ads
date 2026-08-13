@@ -11,7 +11,7 @@ export type NativeAdProps = {
     starRating: Double | null;
     icon: NativeAdImage | null;
     images: Array<NativeAdImage> | null;
-    mediaContent: NativeMediaContent;
+    mediaContent?: NativeMediaContent;
     extras: UnsafeObject | null;
     adSourceName?: string;
     adSourceInstanceName?: string;

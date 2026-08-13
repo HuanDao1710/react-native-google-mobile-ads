@@ -35,7 +35,8 @@ export type NativeAdProps = {
   starRating: Double | null;
   icon: NativeAdImage | null;
   images: Array<NativeAdImage> | null;
-  mediaContent: NativeMediaContent;
+  // Omitted when the ad has no media, on both platforms.
+  mediaContent?: NativeMediaContent;
   extras: UnsafeObject | null;
   // App-specific: winning mediation network, read off ResponseInfo at load time so
   // callers can adapt the ad layout before the impression is recorded (the paid

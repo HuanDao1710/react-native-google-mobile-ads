@@ -72,7 +72,7 @@ export class NativeAd {
     this.starRating = props.starRating;
     this.icon = props.icon;
     this.images = props.images;
-    this.mediaContent = props.mediaContent;
+    this.mediaContent = props.mediaContent ?? null;
     this.extras = props.extras as Record<string, unknown>;
     this.adSourceName = props.adSourceName;
     this.adSourceInstanceName = props.adSourceInstanceName;

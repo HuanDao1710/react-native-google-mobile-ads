@@ -119,13 +119,20 @@ RCT_EXPORT_METHOD(
           @"starRating" : nativeAd.starRating ?: [NSNull null],
           @"icon" : (nativeAd.icon && nativeAd.icon.imageURL != nil)
               ? @{@"scale" : @(nativeAd.icon.scale), @"url" : nativeAd.icon.imageURL.absoluteString}
-              : [NSNull null],
-          @"mediaContent" : @{
-            @"aspectRatio" : @(nativeAd.mediaContent.aspectRatio),
-            @"hasVideoContent" : @(nativeAd.mediaContent.hasVideoContent),
-            @"duration" : @(nativeAd.mediaContent.duration)
-          }
+              : [NSNull null]
         } mutableCopy];
+
+        // Android omits mediaContent when the ad has none, so JS can treat the key's
+        // presence as "this ad has media". GADNativeAd.mediaContent is never nil, so
+        // check for actual content to keep both platforms on the same contract.
+        GADMediaContent *mediaContent = nativeAd.mediaContent;
+        if (mediaContent.hasVideoContent || mediaContent.mainImage != nil) {
+          data[@"mediaContent"] = @{
+            @"aspectRatio" : @(mediaContent.aspectRatio),
+            @"hasVideoContent" : @(mediaContent.hasVideoContent),
+            @"duration" : @(mediaContent.duration)
+          };
+        }
 
         // App-specific: winning mediation network at load time, so JS can adapt the ad
         // layout before the impression is recorded (paid events fire too late for that).
